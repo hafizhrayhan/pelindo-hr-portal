@@ -1,68 +1,294 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useState } from "react";
+
+interface LeaveRequest {
+  id: string;
+  employeeName: string;
+  division: string;
+  leaveType: string;
+  startDate: string;
+  endDate: string;
+  reason: string;
+  status: "Pending" | "Approved" | "Rejected";
+}
+
+export default function HRPortal() {
+  const [role, setRole] = useState<"employee" | "hr">("employee");
+  const [leaveQuota, setLeaveQuota] = useState<number>(12);
+
+  const [requests, setRequests] = useState<LeaveRequest[]>([
+    {
+      id: "REQ-001",
+      employeeName: "Budi Santoso",
+      division: "Operasional Pelabuhan",
+      leaveType: "Cuti Tahunan",
+      startDate: "2026-09-15",
+      endDate: "2026-09-17",
+      reason: "Acara keluarga di luar kota",
+      status: "Approved",
+    },
+    {
+      id: "REQ-002",
+      employeeName: "Siti Rahma",
+      division: "Pengelolaan SDM",
+      leaveType: "Izin Sakit",
+      startDate: "2026-09-12",
+      endDate: "2026-09-12",
+      reason: "Pemeriksaan medis rutin",
+      status: "Pending",
+    },
+  ]);
+
+  const [formData, setFormData] = useState({
+    employeeName: "",
+    division: "Pengelolaan SDM",
+    leaveType: "Cuti Tahunan",
+    startDate: "",
+    endDate: "",
+    reason: "",
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (leaveQuota <= 0 && formData.leaveType === "Cuti Tahunan") {
+      alert("Sisa kuota cuti tahunan Anda telah habis!");
+      return;
+    }
+
+    const newRequest: LeaveRequest = {
+      id: `REQ-00${requests.length + 1}`,
+      ...formData,
+      status: "Pending",
+    };
+
+    setRequests([newRequest, ...requests]);
+    if (formData.leaveType === "Cuti Tahunan") {
+      setLeaveQuota((prev) => prev - 1);
+    }
+
+    setFormData({
+      employeeName: "",
+      division: "Pengelolaan SDM",
+      leaveType: "Cuti Tahunan",
+      startDate: "",
+      endDate: "",
+      reason: "",
+    });
+
+    alert("Pengajuan cuti berhasil dikirim ke Departemen SDM.");
+  };
+
+  const handleStatusUpdate = (id: string, newStatus: "Approved" | "Rejected") => {
+    setRequests(
+      requests.map((req) => (req.id === id ? { ...req, status: newStatus } : req))
+    );
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <div className="min-h-screen bg-slate-50 text-slate-800 font-sans">
+      {/* Navbar Enterprise */}
+      <header className="bg-blue-900 text-white shadow-md">
+        <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+          <div>
+            <h1 className="text-xl font-bold tracking-wide">PELINDO HR PORTAL</h1>
+            <p className="text-xs text-blue-200">Sistem Pengelolaan SDM & Layanan Pegawai</p>
+          </div>
+          <div className="flex items-center gap-2 bg-blue-950 p-1.5 rounded-lg border border-blue-800">
+            <span className="text-xs text-slate-300 font-medium px-2">Mode:</span>
+            <button
+              onClick={() => setRole("employee")}
+              className={`text-xs px-3 py-1 rounded font-semibold transition ${
+                role === "employee" ? "bg-blue-600 text-white" : "text-slate-300 hover:text-white"
+              }`}
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+              Pegawai
+            </button>
+            <button
+              onClick={() => setRole("hr")}
+              className={`text-xs px-3 py-1 rounded font-semibold transition ${
+                role === "hr" ? "bg-blue-600 text-white" : "text-slate-300 hover:text-white"
+              }`}
             >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+              Admin HR
+            </button>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+      </header>
+
+      <main className="max-w-6xl mx-auto px-4 py-8">
+        {role === "employee" ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Profil Kuota Pegawai */}
+            <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm h-fit">
+              <h2 className="text-base font-bold text-slate-900 mb-4 border-b pb-2">Informasi Pegawai</h2>
+              <div className="space-y-3 text-sm">
+                <div>
+                  <span className="text-slate-500 block text-xs">Divisi Kerja</span>
+                  <span className="font-medium text-slate-800">Departemen Pengelolaan SDM</span>
+                </div>
+                <div>
+                  <span className="text-slate-500 block text-xs">Sisa Kuota Cuti Tahunan</span>
+                  <span className="text-2xl font-bold text-blue-900">{leaveQuota} Hari</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Form Pengajuan */}
+            <div className="md:col-span-2 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+              <h2 className="text-base font-bold text-slate-900 mb-4 border-b pb-2">Formulir Pengajuan Cuti / Izin</h2>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-600 mb-1">Nama Pegawai</label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.employeeName}
+                      onChange={(e) => setFormData({ ...formData, employeeName: e.target.value })}
+                      placeholder="Masukkan nama lengkap"
+                      className="w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-600 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-600 mb-1">Jenis Pengajuan</label>
+                    <select
+                      value={formData.leaveType}
+                      onChange={(e) => setFormData({ ...formData, leaveType: e.target.value })}
+                      className="w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-600 outline-none"
+                    >
+                      <option>Cuti Tahunan</option>
+                      <option>Izin Sakit</option>
+                      <option>Izin Khusus</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-600 mb-1">Tanggal Mulai</label>
+                    <input
+                      type="date"
+                      required
+                      value={formData.startDate}
+                      onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                      className="w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-600 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-600 mb-1">Tanggal Selesai</label>
+                    <input
+                      type="date"
+                      required
+                      value={formData.endDate}
+                      onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                      className="w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-600 outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Alasan Pengajuan</label>
+                  <textarea
+                    required
+                    rows={3}
+                    value={formData.reason}
+                    onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
+                    placeholder="Tuliskan keterangan izin/cuti secara jelas..."
+                    className="w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-600 outline-none"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full bg-blue-900 hover:bg-blue-800 text-white font-semibold py-2.5 rounded-lg text-sm transition shadow-sm"
+                >
+                  Kirim Pengajuan
+                </button>
+              </form>
+            </div>
+          </div>
+        ) : (
+          /* Dashboard HR Admin */
+          <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+            <div className="flex justify-between items-center mb-4 border-b pb-3">
+              <div>
+                <h2 className="text-base font-bold text-slate-900">Daftar Pengajuan Cuti Karyawan</h2>
+                <p className="text-xs text-slate-500">Departemen Pengelolaan SDM Pelindo</p>
+              </div>
+              <span className="text-xs bg-slate-100 px-3 py-1 rounded-full font-medium text-slate-600 border">
+                Total: {requests.length} Pengajuan
+              </span>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="bg-slate-100 text-slate-600 border-b">
+                    <th className="p-3">ID</th>
+                    <th className="p-3">Nama Pegawai</th>
+                    <th className="p-3">Jenis Cuti</th>
+                    <th className="p-3">Periode</th>
+                    <th className="p-3">Alasan</th>
+                    <th className="p-3">Status</th>
+                    <th className="p-3 text-center">Aksi Persetujuan</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {requests.map((req) => (
+                    <tr key={req.id} className="hover:bg-slate-50">
+                      <td className="p-3 font-semibold text-slate-700">{req.id}</td>
+                      <td className="p-3">
+                        <div className="font-semibold text-slate-800">{req.employeeName}</div>
+                        <div className="text-[11px] text-slate-400">{req.division}</div>
+                      </td>
+                      <td className="p-3">{req.leaveType}</td>
+                      <td className="p-3 text-slate-600">
+                        {req.startDate} s/d {req.endDate}
+                      </td>
+                      <td className="p-3 max-w-xs truncate text-slate-600" title={req.reason}>
+                        {req.reason}
+                      </td>
+                      <td className="p-3">
+                        <span
+                          className={`px-2 py-1 rounded text-[10px] font-bold ${
+                            req.status === "Approved"
+                              ? "bg-green-100 text-green-700"
+                              : req.status === "Rejected"
+                              ? "bg-red-100 text-red-700"
+                              : "bg-amber-100 text-amber-700"
+                          }`}
+                        >
+                          {req.status}
+                        </span>
+                      </td>
+                      <td className="p-3 text-center">
+                        {req.status === "Pending" ? (
+                          <div className="flex justify-center gap-2">
+                            <button
+                              onClick={() => handleStatusUpdate(req.id, "Approved")}
+                              className="bg-emerald-600 hover:bg-emerald-700 text-white px-2 py-1 rounded text-[11px] font-medium"
+                            >
+                              Setujui
+                            </button>
+                            <button
+                              onClick={() => handleStatusUpdate(req.id, "Rejected")}
+                              className="bg-rose-600 hover:bg-rose-700 text-white px-2 py-1 rounded text-[11px] font-medium"
+                            >
+                              Tolak
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="text-slate-400 italic text-[11px]">Selesai</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
